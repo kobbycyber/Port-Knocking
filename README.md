@@ -2,7 +2,7 @@
 Reverse Port Knocking Shell
 
 
-The backdoor runs forever to hack into the server, listes passively for incoming packets. 
+The backdoor runs forever to hack into the server, listens passively for incoming packets. 
 The backdoor uses raw sockets for this purpose.
 
 The Knocker is a client which issues the sequence of packets.
