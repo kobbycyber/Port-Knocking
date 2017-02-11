@@ -1,0 +1,20 @@
+#!/usr/bin/python
+
+import sys, socket
+
+ip_address = sys.argv[2]
+# print(ip_address)
+
+try:
+	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+except socket.error , msg:
+	print 'Socket could not be created. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+	sys.exit()
+
+conf_file = sys.argv[1]
+file = open(conf_file, 'r')
+for line in file:
+	port = line.split()
+	packet = "hello"
+	ret = sock.sendto(packet, (ip_address, int(port[0])))
+	# print "sent %d bytes" % ret

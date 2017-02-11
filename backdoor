@@ -1,0 +1,86 @@
+#!/usr/bin/python
+import subprocess
+import sys, socket
+import urllib
+from struct import *
+
+portlist = list()
+pktmap= dict()
+
+def update(source_addr,port):
+	# print "update dstport is",port
+	try:
+		# print "inside try"
+		position = portlist.index(port)
+		count = pktmap.get(source_addr[0],0)
+		# print "position",position
+		if position is 0 and count is 0:
+					pktmap[source_addr[0]]=1
+		elif count is position:
+				pktmap[source_addr[0]]+=1
+		else:
+				pktmap[source_addr[0]]=0
+		return
+	except:
+		pass
+
+def verifier():
+	if pktmap is None:
+		return
+	for key,value in pktmap.iteritems():
+		if value ==len(portlist):
+			# print pktmap
+			# print "value",value
+			return_code = subprocess.call(mycommand, shell=True)
+			pktmap[key]=0
+			break
+
+######## code to fetch command from url######
+
+url = sys.argv[2]
+f = urllib.urlopen(url)
+mycommand = f.read()
+# print mycommand
+
+#################################################  
+
+conf_file = sys.argv[1]
+file = open(conf_file, 'r')
+for line in file:
+	port = line.split()
+	portlist.append(port[0])
+
+try:
+	sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
+except socket.error , msg:
+	print 'Socket could not be created. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+	sys.exit()
+while True:
+	# print portlist
+	packet = sock.recvfrom(65535)
+	################# unpacking packet####################
+	packet = packet[0]
+	ip_header = packet[0:20]
+	iphead = unpack('!BBHHHBBH4s4s' , ip_header)
+	version_ihl = iphead[0]
+	version = version_ihl >> 4
+	ihl = version_ihl & 0xF
+	iph_length = ihl * 4   
+	ttl = iphead[5]
+	protocol = iphead[6]
+	source_addr = socket.inet_ntoa(iphead[8]); #source ip
+	dest_addr = socket.inet_ntoa(iphead[9]); # dest ip
+	# print 'Version : ' + str(version) + ' IP Header Length : ' + str(ihl) + ' TTL : ' + str(ttl) + ' Protocol : ' + str(protocol) + ' Source Address : ' + str(source_addr) + ' Destination Address : ' + str(dest_addr)
+	udp_header = packet[iph_length:iph_length+8]
+	udphead = unpack('!HHHH' , udp_header)
+	source_port = udphead[0] # source port
+	dest_port = udphead[1]	#dest port
+	# print "destport", type(dest_port)
+
+	#############################################################33
+	update(source_addr, str(dest_port))
+	verifier()
+
+
+
+
